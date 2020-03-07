@@ -33,6 +33,12 @@ import re
 #using these two libs for the datafile i am going to pass in (simulating some env variables)
 import os
 import sys
+#i need a few libs for webscraping twitter since it is a dynamic site that has some weird modal stuff idk
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+#importing tweepy so i can grab the tweets scraped from the webscraper
+import tweepy
 
 #################### HELPERS ####################
 
@@ -180,6 +186,101 @@ def clean_tweet(tweet_object):
 
     return cleaned_tweet
 
+
+def scrape_comments(datafile_, brand_tweets_list):
+
+    #bringing in the datafile and the brand list
+    datafile = datafile_
+    brand_tweets = brand_tweets_list
+
+    #going to make another save file too while im here in the preamble
+    savefile = open('comments_for_' + str(datafile['output_file_name']) + '.txt', 'w')
+
+    #here is where i am setting up the tweepy connection. I am using tweepy because it is an easy and free connection
+    #  to twitter (outside of the official twitterapi library) and it has this cool get_status() method ill use later
+    auth = tweepy.OAuthHandler(str(datafile['c_key']), str(datafile['c_secret']))
+    auth.set_access_token(str(datafile['a_token']), str(datafile['a_secret']))
+    api = tweepy.API(auth)
+
+    #gotta bring in our reliable CHROMEDRIVER baby
+    driver = webdriver.Chrome('./Chrome/' + str(datafile['chrome_version']) + '/chromedriver')
+
+    #setting up an empty list to put comment tweet obj in there
+    comment_tweets = []
+
+    #quick little counter for the tweets
+    tweet_count = 0
+
+    #it's time to start pulling tweets from the twitter website, i can loop over the brand tweets list and point the webscraper at the url
+    for brand_tweet in brand_tweets:
+        
+        tweet_count += 1
+        print("Scraping brand tweet #{}: {}".format(tweet_count, brand_tweet['text']))
+
+        #going to call the chrome browser
+        driver.get(brand_tweet['url'])
+        time.sleep(4)
+
+        '''
+        here is where i need to add the part where it hits page down a whole bunch because if i dont do it here or manually it will only pull like 5 comments per tweet
+        '''
+
+        #this is the combination of selenium and bs4 that i have been able to get to work for twitter
+        soup = BeautifulSoup(driver.page_source, 'html5lib')
+        #after experience i know that i can grab all of the links (each tweet in the thread is like a link to the individual page, and i can pull the id out of the link)
+        comment_links = soup.find_all('a', attrs={'href': re.compile(r'/*/status/[0-9]+$')})
+        comment_tweet_ids = [comment['href'].split('/')[-1] for comment in comment_links]
+
+        for comment_tweet_id in comment_tweet_ids:
+
+            #here is where i start to bring in the tweepy method for getting a status
+            try:
+                new_comment = add_senti_analysis(clean_tweet(api.get_status(comment_tweet_id)._json))
+                if(new_comment['in_reply_to_status_id_str'] == "Brand Tweet"):
+                    new_comment['in_reply_to_status_id_str'] = brand_tweet['id_str']
+                print(new_comment['text'])
+                #add it to the list of comment tweets
+                comment_tweets.append(new_comment)
+                savefile.write(str(new_comment) + '\n')
+                
+                #reset our rate_limit_hit error counter
+                rate_limit_errs = 0
+
+            #since this is a try clase we need to look for exceptions. the ones i know of are the tweepy rate limit error or a chromedriver error (cant do a whole lot about)
+            except tweepy.RateLimitError as err:
+                print("Oh no, we seem to have run into the rate limiter from tweepy: {}. Sleeping for 3 minutes to hold".format(err))
+                time.sleep(180)
+            
+            #a more general exception
+            except Exception as err:
+                print("Oh no, we seem to have run into a strange error: {}. Please check to see if this will impare performance. Sleeping for 10 seconds to hold".format(err))
+                time.sleep(10)
+                rate_limit_errs += 1
+                
+                #if there are like more than 5 errors that werent rate limit errors then we need to break
+                if(rate_limit_errs > 4):
+                    driver.quit()
+                    #time to dump our data out to the directory
+                    with open('comments_for_' + str(datafile['output_file_name']) + '.json', 'w') as comments_json:
+                        json.dump(comment_tweets, comments_json)
+                    comment_tweets_df = pandas.DataFrame(comment_tweets)
+                    comment_tweets_df.to_csv('comments_for_' + str(datafile['output_file_name']) + '.csv', encoding='utf-8')
+                    break
+
+                continue
+
+        #i know that the selenium browser will get slow after opening so many pages (it is chrome after all)
+        # so every 25 brand tweets we are going to close the browser and reopen it
+        if(tweet_count % 25 == 0):
+            driver.quit()
+            time.sleep(2)
+            driver = webdriver.Chrome('./Chrome/' + str(datafile['chrome_version']) + '/chromedriver')
+
+    #after it's done pulling comments per tweet, lets report the successes and return the comments list
+    print("Total number of comments pulled: {} with an average of {} tweets per comment".format(len(comment_tweets), (len(comment_tweets)/len(brand_tweets))))
+    return comment_tweets
+
+
 #################### MAIN () ####################
 
 def main():
@@ -300,12 +401,33 @@ def main():
         #okay now that we made it here its time to complete the loop and call the Twitter api again. all that is required is to add the next token in the params dictionary like so:
         request = api.request("tweets/search/fullarchive/:{}".format(str(datafile['dev_environment'])), {"query": "from:{} lang:en".format(str(datafile['target_user_id'])), "toDate": str(datafile['toDate']), "fromDate": str(datafile['fromDate']), "maxResults": int(datafile['max_results']), "next": str(next_token)})
 
+    #Time to write out some files now that the tweet pull down is done!
+    #it would be easy enough to write out a json file and a csv file for the tweet list and brand_tweets list
+    with(open(str(datafile['output_file_name']) + '.json', 'w')) as json_tweets:
+        json.dump(TWEET_LIST, json_tweets)
+    tweet_list_df = pandas.DataFrame(TWEET_LIST)
+    tweet_list_df.to_csv(str(datafile['output_file_name']) + '.csv', encoding='utf-8')
 
-        """
-        THIS IS WHERE I NEED TO ADD THE WEBSCRAPER
-        """
-        
+    with(open('brand_' + str(datafile['output_file_name']) + '.json', 'w')) as json_brand:
+        json.dump(BRAND_LIST, json_brand)
+    brand_list_df = pandas.DataFrame(BRAND_LIST)
+    brand_list_df.to_csv('brand_' + str(datafile['output_file_name']) + '.csv', encoding='utf-8')
 
-                    
+    #also need to close the save file so it doesnt take up any memory while we are working on the webscraper
+    savefile.close()
+
+    print("Total number of tweets pulled: {}. Of those, {}% were from the brand ({} tweets)".format(len(TWEET_LIST), (len(BRAND_LIST)/len(TWEET_LIST)), len(BRAND_LIST)))
+
+    #I am going to start the webscraping portion of the program here.
+    print("Starting webscraper in", end=" ")
+    for i in range(0,3):
+        print(3 - i)
+        #lmao this might trip someone up
+        time.sleep(.9)
+
+    
+
+
+
 
 main()
