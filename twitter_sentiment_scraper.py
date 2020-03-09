@@ -39,6 +39,9 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 #importing tweepy so i can grab the tweets scraped from the webscraper
 import tweepy
+#importing the streamlit library for some fun graphing and dataviz
+import streamlit
+
 
 #################### HELPERS ####################
 
@@ -276,6 +279,8 @@ def scrape_comments(datafile_, brand_tweets_list):
             time.sleep(2)
             driver = webdriver.Chrome('./Chrome/' + str(datafile['chrome_version']) + '/chromedriver')
 
+    #closing the save file to free that mem back up        
+    savefile.close()
     #after it's done pulling comments per tweet, lets report the successes and return the comments list
     print("Total number of comments pulled: {} with an average of {} tweets per comment".format(len(comment_tweets), (len(comment_tweets)/len(brand_tweets))))
     return comment_tweets
@@ -422,12 +427,21 @@ def main():
     print("Starting webscraper in", end=" ")
     for i in range(0,3):
         print(3 - i)
-        #lmao this might trip someone up
+        #lmao this might trip someone up, probably not tho and this is just for entertainment
         time.sleep(.9)
 
-    
+    #i wrote a helper function to do all of the webscraping, which you can see above in the HELPERS section, but this will pull all of the comments for the brand tweets
+    comment_tweets = scrape_comments(datafile, BRAND_LIST)
+    #now i can just dump them out to the local directory the same way as before, in json and in csv
+    with open("comments_for_" + str(datafile["output_file_name"]) + ".json") as comments_json:
+        json.dump(comment_tweets, comments_json)
+    comment_tweets_df = pandas.DataFrame(comment_tweets)
+    comment_tweets_df.to_csv("comments_for_" + str(datafile["output_file_name"]) + ".csv", encoding="utf-8")
 
 
+    '''
+    here is where i want to do all of the streamlit stuff
+    '''
 
 
 main()
