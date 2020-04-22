@@ -1,2 +1,4 @@
+#this is for me - making the datafile requires your access keys and tokens (you cant use mine sorry, i have a super low rate limit) You will have to make one from the template in the Templates/ folder. 
 make_json_datafile.py
+#im just hiding my datafiles since they contain the access keys and tokens mentioned above
 JsonDatafiles/*
