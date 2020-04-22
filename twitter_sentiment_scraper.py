@@ -59,7 +59,7 @@ def open_file(file_path):
         for line in data_file:
             data_list = eval(line)
         print('returning a list of dictionaries')
-        return data_list
+        return data_list[0]
     #basically same thing as the json file, just saved as a text file
     elif(file_path.split('.')[-1].lower() == 'txt'):
         data_file = open(file_path, 'r')
@@ -281,8 +281,14 @@ def scrape_comments(datafile_, brand_tweets_list):
 
     #closing the save file to free that mem back up        
     savefile.close()
+    
     #after it's done pulling comments per tweet, lets report the successes and return the comments list
-    print("Total number of comments pulled: {} with an average of {} tweets per comment".format(len(comment_tweets), (len(comment_tweets)/len(brand_tweets))))
+    try:
+        print("Total number of comments pulled: {} with an average of {} tweets per comment".format(len(comment_tweets), (len(comment_tweets)/len(brand_tweets))))
+    except ZeroDivisionError as err:
+        print("There seems to be no tweets to scrape comments from! See log above for more details.")
+        driver.quit()
+        
     return comment_tweets
 
 
@@ -385,7 +391,7 @@ def main():
                 TWEET_LIST.append(clean_senti_tweet)
 
                 #this is a section where we determine if the tweet was a top level tweet from the brand or a response to someone, etc. 
-                if(clean_senti_tweet['in_reply_to_status_id_str'] is "Brand Tweet"):
+                if(clean_senti_tweet['in_reply_to_status_id_str'] == "Brand Tweet"):
                     #if the tweet has the @ symbol in the first few chars then it's either a retweet or a response (most likely, it could be the case that it is a response with preamble...)
                     if('@' not in clean_senti_tweet['text'][0:4]):
                         BRAND_LIST.append(clean_senti_tweet)
@@ -421,7 +427,11 @@ def main():
     #also need to close the save file so it doesnt take up any memory while we are working on the webscraper
     savefile.close()
 
-    print("Total number of tweets pulled: {}. Of those, {}% were from the brand ({} tweets)".format(len(TWEET_LIST), (len(BRAND_LIST)/len(TWEET_LIST)), len(BRAND_LIST)))
+    #after running this a few times and getting a div by zero error, going to throw a try/catch block here
+    try:
+        print("Total number of tweets pulled: {}. Of those, {}% were from the brand ({} tweets)".format(len(TWEET_LIST), (100 * len(BRAND_LIST)/len(TWEET_LIST)), len(BRAND_LIST)))
+    except ZeroDivisionError as err:
+        print("Okay so we have one of two cases: There are no brand tweets to scrape comments from, or we have run out of requests and were unable to find any tweets (see above for an error code 429).")
 
     #I am going to start the webscraping portion of the program here.
     print("Starting webscraper in", end=" ")
@@ -433,14 +443,14 @@ def main():
     #i wrote a helper function to do all of the webscraping, which you can see above in the HELPERS section, but this will pull all of the comments for the brand tweets
     comment_tweets = scrape_comments(datafile, BRAND_LIST)
     #now i can just dump them out to the local directory the same way as before, in json and in csv
-    with open("comments_for_" + str(datafile["output_file_name"]) + ".json") as comments_json:
+    with open("{}.json".format(str(datafile["output_file_name"])), 'w') as comments_json:
         json.dump(comment_tweets, comments_json)
     comment_tweets_df = pandas.DataFrame(comment_tweets)
-    comment_tweets_df.to_csv("comments_for_" + str(datafile["output_file_name"]) + ".csv", encoding="utf-8")
+    comment_tweets_df.to_csv("{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
 
 
     '''
-    here is where i want to do all of the streamlit stuff
+    here is where i want to do all of the streamlit stuff. Maybe. I should probably just do it in Power BI...
     '''
 
 
