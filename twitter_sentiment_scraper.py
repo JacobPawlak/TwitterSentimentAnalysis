@@ -305,7 +305,19 @@ def merge_brand_and_comments_on_id(datafile_, brand_tweets_df, comment_tweets_df
     return merged_brand_comment_df
 
 
-def make_raspi_datafile(merge):
+def make_raspi_datafile(output_file_name_, merged_brand_comment_df_):
+    #this little helper here is going to spit out a text file and csv file with the sentiment scores in a small format that can be uploaded to the raspi
+    #we will run this pretty much last in the script since we want to use the merged brand and comment table
+
+    #here we are bringing in the arguments to our local scope
+    output_file_name = output_file_name_
+    merged_df = merged_brand_comment_df_
+
+    #making a new dataframe for the raspi output, selecting the id's for the brand and comment tweets, and the respective senti scores
+    raspi_df = merged_df[['id_str_brand', 'senti_score_pos_brand', 'senti_score_neu_brand', 'senti_score_neg_brand', 'senti_score_com_brand', 'id_str_comment', 'senti_score_pos_comment', 'senti_score_neu_comment', 'senti_score_neg_comment', 'senti_score_com_comment']]
+    print("Creating files for raspberry pi extension...")
+    raspi_df.to_csv("raspi_{}.csv".format(str(output_file_name)), encoding="utf-8")
+    raspi_df.to_csv("raspi_{}.txt".format(str(output_file_name)), header=None, index=None, sep=' ', mode='a')
 
     return
 
@@ -472,6 +484,7 @@ def main():
     if(str(sys.argv[2]).lower() == 'verbose'):
         print("Beginning the verbose data dump... creating merged table of brand tweets and comment tweets")
         merged_brand_comment_df = merge_brand_and_comments_on_id(datafile, brand_list_df, comment_tweets_df)
+        make_raspi_datafile(datafile['output_file_name'], merged_brand_comment_df)
 
     '''
     here is where i want to do all of the streamlit stuff. Maybe. I should probably just do it in Power BI...
