@@ -67,7 +67,7 @@ def open_file(file_path):
         for line in data_file:
             data_list = eval(line)
         print('returning a list of dictionaries')
-        return data_list
+        return data_list[0]
     #if the filetype doesnt match on of our cases, just return
     else:
         print("You passed in an unrecognized file type, please use a csv, json, or txt file")
@@ -292,6 +292,18 @@ def scrape_comments(datafile_, brand_tweets_list):
     return comment_tweets
 
 
+def verbose_data_dump(datafile_, brand_tweets_df, comment_tweets_df):
+    #pulling in the params to local variables 
+    datafile = datafile_
+    brand_df = brand_tweets_df
+    comment_df = comment_tweets_df
+
+    #easy little pandas merge, or a left inner join for you sql fans
+    merged_brand_comment_df = pandas.merge(brand_df, comment_df, left_on='id_str', right_on='in_reply_to_status_id_str', how='inner', suffixes=('_brand', '_comment'))
+    merged_brand_comment_df.to_csv("merged_{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
+
+    return
+
 #################### MAIN () ####################
 
 def main():
@@ -299,7 +311,10 @@ def main():
     #since i am passing in some arguements through a json file to replicate env vars, i need to check that it was included in the terminal call
     #if it wasnt, i can just let the user know how to run the program and then return out (nothing will be run past this point)
     if(len(sys.argv) != 2):
-        print("\nPlease use the program like so:\n>> python3 twitter_sentiment_scraper.py unique_datafile.json\nWhere the unique_datafile.json is a json created by make_json_datafile.py")
+        if((len(sys.argv == 3)) and (str(sys.argv[2]).lower() == "verbose")):
+            pass
+        else:
+            print("\nPlease use the program like so:\n>> python3 twitter_sentiment_scraper.py unique_datafile.json\nWhere the unique_datafile.json is a json created by make_json_datafile.py")
         return
 
     try:
@@ -448,7 +463,9 @@ def main():
     comment_tweets_df = pandas.DataFrame(comment_tweets)
     comment_tweets_df.to_csv("{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
 
-
+    #adding a little helper function call down here for a verbose output file, it will combine the brand tweets and the comment tweets into one table or json file. this will be used for the Power BI export. making it as flat as possible
+    if(str(sys.argv[2]).lower() == 'verbose'):
+        verbose_data_dump(datafile, brand_list_df, comment_tweets_df)
     '''
     here is where i want to do all of the streamlit stuff. Maybe. I should probably just do it in Power BI...
     '''
