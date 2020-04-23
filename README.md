@@ -56,13 +56,11 @@ continuing from the example above: python3 twitter_sentiment_scraper.py tesla.js
 running this script will output several files and open up a few browsers if it finds tweets to scrape comments from. If you have just the sandbox account, you can pull ~5000 tweets per month from the account you are scraping, and then the web scraper will grab the comments from all of the account's original tweets.
 
 
+## Notes
 
 ### Twitter accounts I have pulled from already
 * Tesla (TSLA)
 * Scotts Miracle-Gro (SMG)
-
-
-## Notes
 
 #### april 22nd, 2020
 I realised i was somehow using an old work user account, but all of this code was written on my personal machine and I have changed the username and email accordingly 
