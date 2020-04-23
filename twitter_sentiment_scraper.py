@@ -292,7 +292,7 @@ def scrape_comments(datafile_, brand_tweets_list):
     return comment_tweets
 
 
-def verbose_data_dump(datafile_, brand_tweets_df, comment_tweets_df):
+def merge_brand_and_comments_on_id(datafile_, brand_tweets_df, comment_tweets_df):
     #pulling in the params to local variables 
     datafile = datafile_
     brand_df = brand_tweets_df
@@ -301,6 +301,11 @@ def verbose_data_dump(datafile_, brand_tweets_df, comment_tweets_df):
     #easy little pandas merge, or a left inner join for you sql fans
     merged_brand_comment_df = pandas.merge(brand_df, comment_df, left_on='id_str', right_on='in_reply_to_status_id_str', how='inner', suffixes=('_brand', '_comment'))
     merged_brand_comment_df.to_csv("merged_{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
+
+    return merged_brand_comment_df
+
+
+def make_raspi_datafile(merge):
 
     return
 
@@ -465,7 +470,9 @@ def main():
 
     #adding a little helper function call down here for a verbose output file, it will combine the brand tweets and the comment tweets into one table or json file. this will be used for the Power BI export. making it as flat as possible
     if(str(sys.argv[2]).lower() == 'verbose'):
-        verbose_data_dump(datafile, brand_list_df, comment_tweets_df)
+        print("Beginning the verbose data dump... creating merged table of brand tweets and comment tweets")
+        merged_brand_comment_df = merge_brand_and_comments_on_id(datafile, brand_list_df, comment_tweets_df)
+
     '''
     here is where i want to do all of the streamlit stuff. Maybe. I should probably just do it in Power BI...
     '''
