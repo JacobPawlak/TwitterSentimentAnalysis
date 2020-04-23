@@ -15,7 +15,7 @@ import datetime
 ########################## MAIN () ##########################
 
 '''
-Hello! You are going to need to fill in a few places with your access tokens and keys, please check line 31, 32, and 74.
+Hello! You are going to need to fill in a few places with your access tokens and keys, please check line 32, 34, and 76. You will also need to fill in your development environment on line 76
 You can find your keys in the twitter dev portal under https://developer.twitter.com/en/apps/<Your app number> "Keys and Tokens" tab.
 '''
 
@@ -28,7 +28,9 @@ def main():
         return
 
     #set up your auth stuff here. You will need to grab the 4 codes from your twitter dev App page under "Keys and Tokens"
+    #keys go here, (api key, secret key)
     auth = tweepy.OAuthHandler('','')
+    #tokens go here (access token, access secret token)
     auth.set_access_token('', '')
     #once we set the API keys and Acess tokens, we need to push the auth to the Tweepy auth handler, and hopefully we get a api connect returned to us
     api = tweepy.API(auth)
@@ -73,6 +75,7 @@ def main():
     #here is the json file that is being written out to the given filename. it includes all of the datapoints we need to give the 
     datafile = [{"target_user_id": str(target_user_id), "target_user_screen_name": str(target_user), "c_key": "", "c_secret": "", "a_token": "", "a_secret": "", "output_file_name": str(output_file_name), "dev_environment": "", "max_results": "100", "toDate": str(to_date), "fromDate": str(from_date), "chrome_version": str(chrome_version)}]
 
+    #lets name the datafile the name of the brand or account we are looking for. that makes sense to me when you are searching through these, since the account's id is included.
     file_name = "{}.json".format(target_user.lower())
 
     with open(file_name, 'w') as o_f:

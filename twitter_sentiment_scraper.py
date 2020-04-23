@@ -40,7 +40,7 @@ from selenium.webdriver.common.keys import Keys
 #importing tweepy so i can grab the tweets scraped from the webscraper
 import tweepy
 #importing the streamlit library for some fun graphing and dataviz
-import streamlit
+#import streamlit
 
 
 #################### HELPERS ####################
