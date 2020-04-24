@@ -78,6 +78,7 @@ def connect_api(c_key, c_secret, a_token, a_secret):
     #using an OAuth api connection to twitter with my personal twitter account.
     # i will be passing in these keys and tokens from a datafile passed in via command line
     api = TwitterAPI(c_key, c_secret, a_token, a_secret)
+
     #return the api object to the main
     return api
 
@@ -135,6 +136,7 @@ def add_senti_analysis(tweet_object):
     senti_tweet['senti_score_neg'] = score_neg/num_sents
     senti_tweet['senti_score_com'] = score_com/num_sents
 
+    #returns a dict object (the tweet dict with senti scores)
     return senti_tweet
 
 
@@ -187,6 +189,7 @@ def clean_tweet(tweet_object):
     #I can also build the url (like you would see if you browsed on a desktop)
     cleaned_tweet['url'] = "https://twitter.com/{}/status/{}".format(cleaned_tweet['screen_name'], cleaned_tweet['id_str'])
 
+    #returns a dict object (the tweet)
     return cleaned_tweet
 
 
@@ -289,6 +292,7 @@ def scrape_comments(datafile_, brand_tweets_list):
         print("There seems to be no tweets to scrape comments from! See log above for more details.")
         driver.quit()
         
+    #returning a list of dictionaries (tweets)
     return comment_tweets
 
 
@@ -300,8 +304,10 @@ def merge_brand_and_comments_on_id(datafile_, brand_tweets_df, comment_tweets_df
 
     #easy little pandas merge, or a left inner join for you sql fans
     merged_brand_comment_df = pandas.merge(brand_df, comment_df, left_on='id_str', right_on='in_reply_to_status_id_str', how='inner', suffixes=('_brand', '_comment'))
+    #writing it out to a file so we can directly upload it to a Power BI dashboard
     merged_brand_comment_df.to_csv("merged_{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
 
+    #returning the merged dataframe
     return merged_brand_comment_df
 
 
@@ -486,9 +492,6 @@ def main():
         merged_brand_comment_df = merge_brand_and_comments_on_id(datafile, brand_list_df, comment_tweets_df)
         make_raspi_datafile(datafile['output_file_name'], merged_brand_comment_df)
 
-    '''
-    here is where i want to do all of the streamlit stuff. Maybe. I should probably just do it in Power BI...
-    '''
-
+    #okay so change of plans, instead of building the streamlit app in here, I might build it in a sep file and then call it here, or chain these two scipts together
 
 main()
