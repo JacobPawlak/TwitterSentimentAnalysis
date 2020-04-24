@@ -63,4 +63,7 @@ running this script will output several files and open up a few browsers if it f
 * Scotts Miracle-Gro (SMG)
 
 #### april 22nd, 2020
-I realised i was somehow using an old work user account, but all of this code was written on my personal machine and I have changed the username and email accordingly 
+I realised i was somehow using an old work user account, but all of this code was written on my personal machine and I have changed the username and email accordingly
+
+#### april 23rd/24th, 2020
+I added some python Jupyter Notebooks to the repo, i think that will make it easier for people to run this
