@@ -2,3 +2,4 @@
 make_json_datafile.py
 #im just hiding my datafiles since they contain the access keys and tokens mentioned above
 JsonDatafiles/*
+.ipynb_checkpoints/*
