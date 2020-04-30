@@ -333,12 +333,14 @@ def main():
 
     #since i am passing in some arguements through a json file to replicate env vars, i need to check that it was included in the terminal call
     #if it wasnt, i can just let the user know how to run the program and then return out (nothing will be run past this point)
+    verbose_flag = False
     if(len(sys.argv) != 2):
-        if((len(sys.argv == 3)) and (str(sys.argv[2]).lower() == "verbose")):
+        if((len(sys.argv) == 3) and (str(sys.argv[2]).lower() == "verbose")):
+            verbose_flag = True
             pass
         else:
             print("\nPlease use the program like so:\n>> python3 twitter_sentiment_scraper.py unique_datafile.json\nWhere the unique_datafile.json is a json created by make_json_datafile.py")
-        return
+            return
 
     try:
         datafile = open_file(sys.argv[1])
@@ -452,15 +454,15 @@ def main():
 
     #Time to write out some files now that the tweet pull down is done!
     #it would be easy enough to write out a json file and a csv file for the tweet list and brand_tweets list
-    with(open(str(datafile['output_file_name']) + '.json', 'w')) as json_tweets:
+    with open("{}.json".format(str(datafile['output_file_name'])), 'w') as json_tweets:
         json.dump(TWEET_LIST, json_tweets)
     tweet_list_df = pandas.DataFrame(TWEET_LIST)
-    tweet_list_df.to_csv(str(datafile['output_file_name']) + '.csv', encoding='utf-8')
+    tweet_list_df.to_csv( "{}.csv".format(str(datafile['output_file_name'])), encoding='utf-8')
 
-    with(open('brand_' + str(datafile['output_file_name']) + '.json', 'w')) as json_brand:
+    with open("brand_{}.json".format(str(datafile['output_file_name'])), 'w') as json_brand:
         json.dump(BRAND_LIST, json_brand)
     brand_list_df = pandas.DataFrame(BRAND_LIST)
-    brand_list_df.to_csv('brand_' + str(datafile['output_file_name']) + '.csv', encoding='utf-8')
+    brand_list_df.to_csv("brand_{}.csv".format(str(datafile['output_file_name'])), encoding='utf-8')
 
     #also need to close the save file so it doesnt take up any memory while we are working on the webscraper
     savefile.close()
@@ -481,13 +483,13 @@ def main():
     #i wrote a helper function to do all of the webscraping, which you can see above in the HELPERS section, but this will pull all of the comments for the brand tweets
     comment_tweets = scrape_comments(datafile, BRAND_LIST)
     #now i can just dump them out to the local directory the same way as before, in json and in csv
-    with open("{}.json".format(str(datafile["output_file_name"])), 'w') as comments_json:
+    with open("comments_{}.json".format(str(datafile["output_file_name"])), 'w') as comments_json:
         json.dump(comment_tweets, comments_json)
     comment_tweets_df = pandas.DataFrame(comment_tweets)
-    comment_tweets_df.to_csv("{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
+    comment_tweets_df.to_csv("comments_{}.csv".format(str(datafile["output_file_name"])), encoding="utf-8")
 
     #adding a little helper function call down here for a verbose output file, it will combine the brand tweets and the comment tweets into one table or json file. this will be used for the Power BI export. making it as flat as possible
-    if(str(sys.argv[2]).lower() == 'verbose'):
+    if(verbose_flag):
         print("Beginning the verbose data dump... creating merged table of brand tweets and comment tweets")
         merged_brand_comment_df = merge_brand_and_comments_on_id(datafile, brand_list_df, comment_tweets_df)
         make_raspi_datafile(datafile['output_file_name'], merged_brand_comment_df)
