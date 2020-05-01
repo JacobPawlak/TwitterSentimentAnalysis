@@ -200,7 +200,7 @@ def scrape_comments(datafile_, brand_tweets_list):
     brand_tweets = brand_tweets_list
 
     #going to make another save file too while im here in the preamble
-    savefile = open('comments_for_' + str(datafile['output_file_name']) + '.txt', 'w')
+    savefile = open("comments_{}.txt".format(str(datafile['output_file_name'])), 'w')
 
     #here is where i am setting up the tweepy connection. I am using tweepy because it is an easy and free connection
     #  to twitter (outside of the official twitterapi library) and it has this cool get_status() method ill use later
@@ -267,10 +267,10 @@ def scrape_comments(datafile_, brand_tweets_list):
                 if(rate_limit_errs > 4):
                     driver.quit()
                     #time to dump our data out to the directory
-                    with open('comments_for_' + str(datafile['output_file_name']) + '.json', 'w') as comments_json:
+                    with open("comments_{}.json".format(str(datafile['output_file_name'])), 'w') as comments_json:
                         json.dump(comment_tweets, comments_json)
                     comment_tweets_df = pandas.DataFrame(comment_tweets)
-                    comment_tweets_df.to_csv('comments_for_' + str(datafile['output_file_name']) + '.csv', encoding='utf-8')
+                    comment_tweets_df.to_csv("comments_{}.csv".format(str(datafile['output_file_name'])), encoding='utf-8')
                     break
 
                 continue
