@@ -61,6 +61,9 @@ running this script will output several files and open up a few browsers if it f
 ### Twitter accounts I have pulled from already
 * Tesla (TSLA)
 * Scotts Miracle-Gro (SMG)
+* Brown Forman (BF-B)
+* Old Forester ^
+* Fords Gin ^
 
 #### april 22nd, 2020
 I realised i was somehow using an old work user account, but all of this code was written on my personal machine and I have changed the username and email accordingly
